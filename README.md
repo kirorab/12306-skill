@@ -2,6 +2,12 @@
 
 [OpenClaw](https://github.com/openclaw/openclaw) Skill — 查询中国铁路 12306 列车时刻表和余票信息。
 
+## 安装
+
+```bash
+npx skills add kirorab/12306-skill
+```
+
 ## 功能
 
 - 查询任意两站间的列车时刻表和余票
