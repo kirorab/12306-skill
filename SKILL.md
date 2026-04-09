@@ -73,9 +73,59 @@ node {baseDir}/scripts/stations.mjs 杭州
 node {baseDir}/scripts/stations.mjs 香港西九龙
 ```
 
-## Notes
+## Important Notes for AI Assistant
+
+### ⚠️ Station Name Resolution Warning
+
+**CRITICAL**: When querying by city name (e.g., "武汉", "上海", "深圳", "广州"), the API may return trains from/to ANY station in that city, not just the main station.
+
+**Common Pitfalls:**
+- **武汉** includes: 武汉站 (main), 汉口站 (Hankou), 武昌站 (Wuchang), 武汉东站
+- **上海** includes: 上海虹桥 (Hongqiao), 上海站 (main), 上海南站, 上海松江站
+- **深圳** includes: 深圳北站 (main), 深圳站 (Luohu), 福田站, 深圳东站
+- **广州** includes: 广州南站 (main), 广州站, 广州东站, 广州北站
+
+**Best Practice - Always verify exact stations:**
+1. **First**, use `stations.mjs` to list all stations in the city:
+   ```bash
+   node {baseDir}/scripts/stations.mjs 武汉
+   ```
+2. **Then**, query with exact station names for accurate results:
+   ```bash
+   node {baseDir}/scripts/query.mjs 武汉 上海虹桥 -f md
+   ```
+
+### 🔄 Transfer/Connection Guidelines
+
+When planning transfers (中转):
+- **Use JSON output** (`--json`) to verify exact station names
+- Ensure both segments use the **SAME station** (e.g., both use 武汉站, not 武汉→汉口)
+- Recommended minimum transfer time: **20-30 minutes** for same station
+- **Different stations** in same city require additional travel time (e.g., 武汉→汉口 = 30+ min by subway)
+
+### 📋 Query Workflow Recommendation
+
+**For accurate results, follow this workflow:**
+
+1. **List stations** in departure city:
+   ```bash
+   node {baseDir}/scripts/stations.mjs 北京
+   ```
+
+2. **List stations** in arrival city:
+   ```bash
+   node {baseDir}/scripts/stations.mjs 上海
+   ```
+
+3. **Query with exact station names** (e.g., 北京南 → 上海虹桥):
+   ```bash
+   node {baseDir}/scripts/query.mjs 北京南 上海虹桥 -d 2026-03-05 -f md
+   ```
+
+4. **For transfers**: Always verify both segments use the same station by checking `fromStation` and `toStation` in JSON output.
+
+## Technical Notes
 
 - Data comes directly from 12306 official API (no key needed)
 - Station data is cached for 7 days in `{baseDir}/data/stations.json`
-- Supports city names (resolves to main station) or exact station names
 - Works for all train types: G (高铁), D (动车), Z (直达), T (特快), K (快速)

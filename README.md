@@ -1,6 +1,6 @@
 # 12306 火车票查询
 
-[OpenClaw](https://github.com/openclaw/openclaw) Skill — 查询中国铁路 12306 列车时刻表和余票信息。
+[Clawhub](https://clawhub.ai/kirorab/12306) Skill — 查询中国铁路 12306 列车时刻表和余票信息。
 
 ## 安装
 
