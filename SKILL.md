@@ -54,8 +54,12 @@ node {baseDir}/scripts/query.mjs 广州 武汉 --json
 
 ### Output Columns
 
+Every query result includes **出发站** (departure station) and **到达站** (arrival station) columns, showing the exact station name for each train. A summary line also lists all involved stations.
+
 | Column | Meaning |
 |--------|---------|
+| 出发站 | Exact departure station name |
+| 到达站 | Exact arrival station name |
 | 商务/特等 | Business class / Premium (swz) |
 | 一等座 | First class (zy) |
 | 二等座 | Second class (ze) |
@@ -75,54 +79,18 @@ node {baseDir}/scripts/stations.mjs 香港西九龙
 
 ## Important Notes for AI Assistant
 
-### ⚠️ Station Name Resolution Warning
+### Station Names in Results
 
-**CRITICAL**: When querying by city name (e.g., "武汉", "上海", "深圳", "广州"), the API may return trains from/to ANY station in that city, not just the main station.
+When querying by city name (e.g., "武汉", "上海"), the API returns trains from/to ALL stations in that city. The output table always includes **出发站/到达站** columns and a station summary line, so exact station names are always visible.
 
-**Common Pitfalls:**
-- **武汉** includes: 武汉站 (main), 汉口站 (Hankou), 武昌站 (Wuchang), 武汉东站
-- **上海** includes: 上海虹桥 (Hongqiao), 上海站 (main), 上海南站, 上海松江站
-- **深圳** includes: 深圳北站 (main), 深圳站 (Luohu), 福田站, 深圳东站
-- **广州** includes: 广州南站 (main), 广州站, 广州东站, 广州北站
+**For follow-up actions** (transfer planning, hotel booking, taxi, navigation): always use the exact station name from the query result, not the city name.
 
-**Best Practice - Always verify exact stations:**
-1. **First**, use `stations.mjs` to list all stations in the city:
-   ```bash
-   node {baseDir}/scripts/stations.mjs 武汉
-   ```
-2. **Then**, query with exact station names for accurate results:
-   ```bash
-   node {baseDir}/scripts/query.mjs 武汉 上海虹桥 -f md
-   ```
-
-### 🔄 Transfer/Connection Guidelines
+### Transfer/Connection Guidelines
 
 When planning transfers (中转):
-- **Use JSON output** (`--json`) to verify exact station names
-- Ensure both segments use the **SAME station** (e.g., both use 武汉站, not 武汉→汉口)
-- Recommended minimum transfer time: **20-30 minutes** for same station
-- **Different stations** in same city require additional travel time (e.g., 武汉→汉口 = 30+ min by subway)
-
-### 📋 Query Workflow Recommendation
-
-**For accurate results, follow this workflow:**
-
-1. **List stations** in departure city:
-   ```bash
-   node {baseDir}/scripts/stations.mjs 北京
-   ```
-
-2. **List stations** in arrival city:
-   ```bash
-   node {baseDir}/scripts/stations.mjs 上海
-   ```
-
-3. **Query with exact station names** (e.g., 北京南 → 上海虹桥):
-   ```bash
-   node {baseDir}/scripts/query.mjs 北京南 上海虹桥 -d 2026-03-05 -f md
-   ```
-
-4. **For transfers**: Always verify both segments use the same station by checking `fromStation` and `toStation` in JSON output.
+- Ensure both segments use the **SAME station** by checking the 出发站/到达站 columns
+- Same-station transfer: minimum **20-30 minutes**
+- Cross-station transfer in same city: **30+ minutes** (subway/taxi needed, e.g., 武汉站→汉口站)
 
 ## Technical Notes
 

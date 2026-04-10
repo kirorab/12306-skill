@@ -191,6 +191,14 @@ function applyFilters(tickets) {
   return result;
 }
 
+// --- Helpers ---
+
+function stationSummary(tickets) {
+  const fromSet = [...new Set(tickets.map(t => t.fromStation))];
+  const toSet = [...new Set(tickets.map(t => t.toStation))];
+  return { fromStations: fromSet, toStations: toSet };
+}
+
 // --- HTML output ---
 
 function seatCell(val) {
@@ -211,6 +219,8 @@ function buildHTML(tickets, from, to, travelDate, filterDesc) {
     const buyClass = t.canBuy === 'Y' ? 'yes' : 'no';
     return `      <tr>
         <td class="train-code type-${typeClass}">${e(t.trainCode)}</td>
+        <td class="station">${e(t.fromStation)}</td>
+        <td class="station">${e(t.toStation)}</td>
         <td class="time"><span class="depart">${e(t.departTime)}</span><span class="arrow">\u2192</span><span class="arrive">${e(t.arriveTime)}</span></td>
         <td class="duration">${formatDuration(t.duration)}</td>
         ${seatCell(swz)}${seatCell(t.zy)}${seatCell(t.ze)}${seatCell(rw)}${seatCell(t.yw)}${seatCell(t.yz)}${seatCell(t.wz)}
@@ -218,8 +228,15 @@ function buildHTML(tickets, from, to, travelDate, filterDesc) {
       </tr>`;
   }).join('\n');
 
-  const filterTag = filterDesc
-    ? `<div class="filters">${e(filterDesc)}</div>`
+  const tagParts = [];
+  if (filterDesc) tagParts.push(filterDesc);
+  if (tickets.length > 0) {
+    const { fromStations, toStations } = stationSummary(tickets);
+    tagParts.push(`\u51FA\u53D1\u7AD9: ${fromStations.join(', ')}`);
+    tagParts.push(`\u5230\u8FBE\u7AD9: ${toStations.join(', ')}`);
+  }
+  const filterTag = tagParts.length
+    ? `<div class="filters">${e(tagParts.join(' | '))}</div>`
     : '';
 
   return `<!DOCTYPE html>
@@ -231,7 +248,7 @@ function buildHTML(tickets, from, to, travelDate, filterDesc) {
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, "SF Pro Text", "Helvetica Neue", sans-serif; background: #f5f5f7; color: #1d1d1f; }
-  .container { max-width: 1100px; margin: 0 auto; padding: 40px 20px; }
+  .container { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
   header { text-align: center; margin-bottom: 32px; }
   h1 { font-size: 28px; font-weight: 600; letter-spacing: -0.5px; }
   h1 .arrow { margin: 0 12px; color: #86868b; font-weight: 300; }
@@ -247,6 +264,7 @@ function buildHTML(tickets, from, to, travelDate, filterDesc) {
   tr:last-child td { border-bottom: none; }
   tr:hover { background: #fafbff; }
   .train-code { font-weight: 600; text-align: left; padding-left: 16px; }
+  .station { font-size: 13px; color: #1d1d1f; }
   .type-g { color: #0071e3; }
   .type-d { color: #34c759; }
   .type-z { color: #af52de; }
@@ -278,7 +296,7 @@ function buildHTML(tickets, from, to, travelDate, filterDesc) {
     : `
     <table>
       <thead><tr>
-        <th style="text-align:left;padding-left:16px">\u8F66\u6B21</th><th>\u65F6\u95F4</th><th>\u8017\u65F6</th>
+        <th style="text-align:left;padding-left:16px">\u8F66\u6B21</th><th>\u51FA\u53D1\u7AD9</th><th>\u5230\u8FBE\u7AD9</th><th>\u65F6\u95F4</th><th>\u8017\u65F6</th>
         <th>\u5546\u52A1/\u7279\u7B49</th><th>\u4E00\u7B49\u5EA7</th><th>\u4E8C\u7B49\u5EA7</th><th>\u8F6F\u5367/\u52A8\u5367</th><th>\u786C\u5367</th><th>\u786C\u5EA7</th><th>\u65E0\u5EA7</th><th>\u72B6\u6001</th>
       </tr></thead>
       <tbody>
@@ -297,7 +315,15 @@ ${rows}
 function buildMarkdown(tickets, from, to, travelDate, filterDesc) {
   const lines = [];
   lines.push(`## ${from.station_name} \u2192 ${to.station_name} | ${travelDate} | ${tickets.length} \u8D9F\u5217\u8F66`);
-  if (filterDesc) lines.push(`> ${filterDesc}`);
+
+  const descParts = [];
+  if (filterDesc) descParts.push(filterDesc);
+  if (tickets.length > 0) {
+    const { fromStations, toStations } = stationSummary(tickets);
+    descParts.push(`\u51FA\u53D1\u7AD9: ${fromStations.join(', ')}`);
+    descParts.push(`\u5230\u8FBE\u7AD9: ${toStations.join(', ')}`);
+  }
+  if (descParts.length) lines.push(`> ${descParts.join(' | ')}`);
   lines.push('');
 
   if (tickets.length === 0) {
@@ -305,14 +331,14 @@ function buildMarkdown(tickets, from, to, travelDate, filterDesc) {
     return lines.join('\n');
   }
 
-  lines.push('| \u8F66\u6B21 | \u51FA\u53D1\u2192\u5230\u8FBE | \u8017\u65F6 | \u5546\u52A1/\u7279\u7B49 | \u4E00\u7B49\u5EA7 | \u4E8C\u7B49\u5EA7 | \u8F6F\u5367/\u52A8\u5367 | \u786C\u5367 | \u786C\u5EA7 | \u65E0\u5EA7 | \u72B6\u6001 |');
-  lines.push('|------|-----------|------|-----------|--------|--------|-----------|------|------|------|------|');
+  lines.push('| \u8F66\u6B21 | \u51FA\u53D1\u7AD9 | \u5230\u8FBE\u7AD9 | \u51FA\u53D1\u2192\u5230\u8FBE | \u8017\u65F6 | \u5546\u52A1/\u7279\u7B49 | \u4E00\u7B49\u5EA7 | \u4E8C\u7B49\u5EA7 | \u8F6F\u5367/\u52A8\u5367 | \u786C\u5367 | \u786C\u5EA7 | \u65E0\u5EA7 | \u72B6\u6001 |');
+  lines.push('|------|--------|--------|-----------|------|-----------|--------|--------|-----------|------|------|------|------|');
 
   for (const t of tickets) {
     const swz = t.swz !== '--' ? t.swz : t.tz !== '--' ? t.tz : '--';
     const rw = t.rw !== '--' ? t.rw : t.dw !== '--' ? t.dw : '--';
     const buy = t.canBuy === 'Y' ? '\u2705' : '\u274C';
-    lines.push(`| ${t.trainCode} | ${t.departTime}\u2192${t.arriveTime} | ${formatDuration(t.duration)} | ${swz} | ${t.zy} | ${t.ze} | ${rw} | ${t.yw} | ${t.yz} | ${t.wz} | ${buy} |`);
+    lines.push(`| ${t.trainCode} | ${t.fromStation} | ${t.toStation} | ${t.departTime}\u2192${t.arriveTime} | ${formatDuration(t.duration)} | ${swz} | ${t.zy} | ${t.ze} | ${rw} | ${t.yw} | ${t.yz} | ${t.wz} | ${buy} |`);
   }
   return lines.join('\n');
 }
